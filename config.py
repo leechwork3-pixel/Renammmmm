@@ -8,24 +8,24 @@ id_pattern = re.compile(r'^-?\d+$')
 
 class Config:
     # ────────── Bot Authentication ──────────
-    API_ID = int(os.environ.get("API_ID", "123456"))
-    API_HASH = os.environ.get("API_HASH", "your_api_hash")
-    BOT_TOKEN = os.environ.get("BOT_TOKEN", "your_bot_token")
-    BOT_USERNAME = os.environ.get("BOT_USERNAME", "AutoRenameBot")
+    API_ID = int(os.environ.get("API_ID", "24171111"))
+    API_HASH = os.environ.get("API_HASH", "c850cb56b64b6c3b10ade9c28ef7966a")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN", "7813615574:AAFiXEgYhwsu1xs0RN5aRVUAFgoUq32NzbU")
+    BOT_USERNAME = os.environ.get("BOT_USERNAME", "@AutoRenamerr_Bot")
 
     # ────────── MongoDB Database ──────────
-    DB_URL = os.environ.get("DB_URL", "mongodb://localhost:27017")
+    DB_URL = os.environ.get("DB_URL", "mongodb+srv://Furina:furinafile@furinafile.tjrqfwh.mongodb.net/?retryWrites=true&w=majority&appName=Furinafile")
     DB_NAME = os.environ.get("DB_NAME", "AutoRenameBot")
 
-    # ────────── Channels / Alerts ──────────
-    LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1001234567890"))
-    SUPPORT_CHAT = int(os.environ.get("SUPPORT_CHAT", "-1001234567890"))
-    DUMP_CHANNEL = int(os.environ.get("DUMP_CHANNEL", "-1002887783820"))
+    # ────────── Channels / Alerts ──────7813615574────
+    LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002585029413"))
+    SUPPORT_CHAT = int(os.environ.get("SUPPORT_CHAT", "-1002329676743"))
+    DUMP_CHANNEL = int(os.environ.get("DUMP_CHANNEL", "-1002104276255"))
     STORAGE_CHANNEL = DUMP_CHANNEL
 
     FORCE_SUB_CHANNELS = [
         int(x) if id_pattern.match(x) else x
-        for x in os.environ.get("FORCE_SUB_CHANNELS", "").split(',') if x
+        for x in os.environ.get("FORCE_SUB_CHANNELS", "-1002851018823").split(',') if x
     ]
 
     START_PIC = os.environ.get(
@@ -34,7 +34,7 @@ class Config:
     )
 
     # ────────── Owner/Admin Control ──────────
-    BOT_OWNER = int(os.environ.get("BOT_OWNER", "123456789"))
+    BOT_OWNER = int(os.environ.get("BOT_OWNER", "1335306418"))
     ADMIN = [BOT_OWNER]  # You can add more user IDs here manually if needed
 
     # ────────── Webhook/Hosting ──────────
