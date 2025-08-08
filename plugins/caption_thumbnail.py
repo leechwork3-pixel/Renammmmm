@@ -1,5 +1,7 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.errors import FloodWait
+import asyncio
 from helper.database import Element_Network
 
 # ─────────────────────────────────────────────
@@ -33,10 +35,9 @@ async def delete_caption(client: Client, message: Message):
 @Client.on_message(filters.private & filters.command(['see_caption', 'view_caption', 'viewcaption']))
 async def see_caption(client: Client, message: Message):
     caption = await Element_Network.get_caption(message.from_user.id)
-    if caption:
-        await message.reply_text(f"📋 Your current caption:\n\n`{caption}`")
-    else:
-        await message.reply_text("❌ You have no caption set.")
+    if caption is None or caption == "":
+        caption = "❌ You have no caption set."
+    await message.reply_text(f"📋 Your current caption:\n\n`{caption}`")
 
 # ─────────────────────────────────────────────
 # View current thumbnail
@@ -44,10 +45,9 @@ async def see_caption(client: Client, message: Message):
 @Client.on_message(filters.private & filters.command(['view_thumb', 'viewthumb']))
 async def view_thumb(client: Client, message: Message):
     thumb = await Element_Network.get_thumbnail(message.from_user.id)
-    if thumb:
-        await client.send_photo(chat_id=message.chat.id, photo=thumb)
-    else:
-        await message.reply_text("❌ You don't have any thumbnail set.")
+    if not thumb:
+        return await message.reply_text("❌ You don't have any thumbnail set.")
+    await client.send_photo(chat_id=message.chat.id, photo=thumb)
 
 # ─────────────────────────────────────────────
 # Delete custom thumbnail
@@ -63,6 +63,20 @@ async def remove_thumb(client: Client, message: Message):
 @Client.on_message(filters.private & filters.photo)
 async def add_thumb(client: Client, message: Message):
     mkn = await message.reply_text("⏳ Saving your thumbnail, please wait...")
-    await Element_Network.set_metadata(message.from_user.id, "thumbnail", message.photo.file_id)
-    await mkn.edit("✅ Thumbnail saved successfully.")
-    
+    try:
+        await Element_Network.set_metadata(message.from_user.id, "thumbnail", message.photo.file_id)
+        try:
+            await mkn.edit("✅ Thumbnail saved successfully.")
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+            # Retry once after wait
+            try:
+                await mkn.edit("✅ Thumbnail saved successfully.")
+            except Exception as err:
+                print(f"[caption_thumbnail error] Failed to edit message after FloodWait: {err}")
+        except Exception as err:
+            print(f"[caption_thumbnail error] Failed to edit message: {err}")
+    except Exception as e:
+        await mkn.edit("❌ Failed to save thumbnail. Please try again later.")
+        print(f"[caption_thumbnail error] Failed to save thumbnail: {e}")
+        
