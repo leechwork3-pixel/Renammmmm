@@ -1,7 +1,6 @@
 pyrogram==2.0.106
-tgcrypto
+TgCrypto
+pymongo
 motor
-aiohttp
-Flask
-python-dotenv
-pytz
+hachoir
+Pillow
