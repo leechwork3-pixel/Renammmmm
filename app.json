@@ -1,17 +1,76 @@
 {
   "name": "AutoRenameBot",
-  "description": "Telegram Rename Bot powered by Pyrogram",
-  "repository": "https://github.com/<your-user>/AutoRenameBot",
-  "keywords": ["telegram", "pyrogram", "bot", "rename"],
+  "description": "A powerful Telegram Bot to rename files, add metadata, captions, and thumbnails — powered by Pyrogram.",
+  "repository": "https://github.com/your-username/AutoRenameBot",
+  "logo": "https://te.legra.ph/file/45453c9242ee37aa1670d.jpg",
+  "keywords": [
+    "telegram",
+    "bot",
+    "pyrogram",
+    "rename",
+    "caption",
+    "thumbnail",
+    "metadata"
+  ],
   "env": {
-    "API_ID": {"required": true},
-    "API_HASH": {"required": true},
-    "BOT_TOKEN": {"required": true},
-    "DB_URL": {"required": true},
-    "DB_NAME": {"required": false, "value": "AutoRenameBot"},
-    "LOG_CHANNEL": {"required": true},
-    "SUPPORT_CHAT": {"required": false},
-    "WEBHOOK": {"required": false, "value": "False"},
-    "START_PIC": {"required": false}
+    "API_ID": {
+      "description": "Your Telegram API ID from https://my.telegram.org/",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "API Hash for the above API ID",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Telegram Bot Token from @BotFather",
+      "required": true
+    },
+    "DB_URL": {
+      "description": "MongoDB connection string",
+      "required": true
+    },
+    "DB_NAME": {
+      "description": "MongoDB database name to use",
+      "required": false,
+      "value": "AutoRenameBot"
+    },
+    "LOG_CHANNEL": {
+      "description": "Log channel ID (starts with -100)",
+      "required": true
+    },
+    "SUPPORT_CHAT": {
+      "description": "Link or ID of your Support Group (optional)",
+      "required": false
+    },
+    "DUMP_CHANNEL": {
+      "description": "Channel ID to store renamed files",
+      "required": true
+    },
+    "BOT_OWNER": {
+      "description": "Your personal Telegram user ID (integer)",
+      "required": true
+    },
+    "FORCE_SUB_CHANNELS": {
+      "description": "Comma-separated list of force-subscribe channel IDs (optional)",
+      "required": false
+    },
+    "START_PIC": {
+      "description": "URL of image shown on /start (optional)",
+      "required": false,
+      "value": "https://te.legra.ph/file/45453c9242ee37aa1670d.jpg"
+    },
+    "PORT": {
+      "description": "Use 8080 if deploying with webhook support (Render/Koyeb)",
+      "required": false,
+      "value": "8080"
+    },
+    "WEBHOOK": {
+      "description": "Set to true if deploying with webhook (Render/Koyeb/VPS), false if polling",
+      "required": false,
+      "value": "False"
+    }
+  },
+  "scripts": {
+    "start": "python bot.py"
   }
 }
