@@ -1,5 +1,17 @@
-# This file allows Pyrogram to treat the 'plugins' folder as a package.
-# All .py files in here will be auto-loaded by Pyrogram because
-# bot.py uses plugins={"root": "plugins"}.
+# plugins/__init__.py
 
-# You can also put global variables or helper imports here if desired.
+ALL_MODULES = [
+    "start_help",
+    "admin_panel",
+    "premium_user",
+    "auto_rename",
+    "force_subs",
+    "file_rename",
+    "caption_thumbnail",
+    "metadata_handler",
+    "queue_handler",
+    "sequence_manager",
+    "format_handler",
+    "antinsfw",
+    "admin_ban"
+]
