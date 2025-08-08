@@ -10,18 +10,17 @@ user_col = db["users"]
 
 class Element_Network:
     """
-    MongoDB helper class to manage all user data for AutoRenameBot.
+    MongoDB-based helper class for AutoRenameBot user management.
     """
 
-    # ========== Ban System ==========
+    # ─────────── Ban System ───────────
     @staticmethod
     async def ban_user(user_id: int):
         await user_col.update_one({"_id": user_id}, {"$set": {"banned": True}}, upsert=True)
 
     @staticmethod
     async def unban_user(user_id: int):
-        await user_col.update_one({"_id": user_id}, {"$unset": {"banned": ""}})
-        await user_col.update_one({"_id": user_id}, {"$unset": {"nsfw_strikes": ""}})
+        await user_col.update_one({"_id": user_id}, {"$unset": {"banned": "", "nsfw_strikes": ""}})
 
     @staticmethod
     async def is_banned(user_id: int) -> bool:
@@ -32,7 +31,7 @@ class Element_Network:
     async def get_banned_users() -> List[int]:
         return [u["_id"] async for u in user_col.find({"banned": True})]
 
-    # ========== NSFW Strikes ==========
+    # ─────────── NSFW Strikes ───────────
     @staticmethod
     async def record_nsfw_strike(user_id: int) -> int:
         doc = await user_col.find_one({"_id": user_id}) or {}
@@ -44,15 +43,58 @@ class Element_Network:
     async def reset_strikes(user_id: int):
         await user_col.update_one({"_id": user_id}, {"$unset": {"nsfw_strikes": ""}})
 
-    # ========== Queue System ==========
+    # ─────────── Rename Format ───────────
+    @staticmethod
+    async def set_format_template(user_id: int, template: str):
+        await user_col.update_one({"_id": user_id}, {"$set": {"format_template": template}}, upsert=True)
+
+    @staticmethod
+    async def get_format_template(user_id: int) -> Optional[str]:
+        user = await user_col.find_one({"_id": user_id})
+        return user.get("format_template") if user else None
+
+    # ─────────── Metadata Settings ───────────
+    @staticmethod
+    async def toggle_metadata(user_id: int) -> bool:
+        user = await user_col.find_one({"_id": user_id})
+        current = user.get("metadata_enabled", False) if user else False
+        new_status = not current
+        await user_col.update_one({"_id": user_id}, {"$set": {"metadata_enabled": new_status}}, upsert=True)
+        return new_status
+
+    @staticmethod
+    async def set_metadata(user_id: int, field: str, value: Any):
+        await user_col.update_one(
+            {"_id": user_id},
+            {"$set": {f"metadata.{field}": value}},
+            upsert=True
+        )
+
+    @staticmethod
+    async def get_metadata(user_id: int) -> Dict[str, Any]:
+        user = await user_col.find_one({"_id": user_id})
+        return user.get("metadata", {}) if user else {}
+
+    # ─────────── Caption & Thumbnail ───────────
+    @staticmethod
+    async def get_caption(user_id: int) -> str:
+        user = await user_col.find_one({"_id": user_id})
+        return user.get("caption", "") if user else ""
+
+    @staticmethod
+    async def get_thumbnail(user_id: int) -> Optional[str]:
+        user = await user_col.find_one({"_id": user_id})
+        return user.get("thumbnail", None) if user else None
+
+    # ─────────── Rename Queue System ───────────
     @staticmethod
     async def add_to_queue(user_id: int, file_info: dict):
         await user_col.update_one({"_id": user_id}, {"$push": {"queue": file_info}}, upsert=True)
 
     @staticmethod
-    async def get_queue(user_id: int):
-        u = await user_col.find_one({"_id": user_id})
-        return u.get("queue", [])
+    async def get_queue(user_id: int) -> List[dict]:
+        user = await user_col.find_one({"_id": user_id})
+        return user.get("queue", []) if user else []
 
     @staticmethod
     async def clear_queue(user_id: int):
@@ -66,37 +108,9 @@ class Element_Network:
     async def clear_all_user_queues():
         await user_col.update_many({}, {"$unset": {"queue": ""}})
 
-    # ========== Rename Format ==========
+    # ─────────── Sequence Mode ───────────
     @staticmethod
-    async def set_format_template(user_id: int, template: str) -> None:
-        await user_col.update_one({"_id": user_id}, {"$set": {"format_template": template}}, upsert=True)
-
-    @staticmethod
-    async def get_format_template(user_id: int) -> Optional[str]:
-        user = await user_col.find_one({"_id": user_id})
-        return user.get("format_template") if user else None
-
-    # ========== Metadata ==========
-    @staticmethod
-    async def toggle_metadata(user_id: int) -> bool:
-        user = await user_col.find_one({"_id": user_id})
-        current = user.get("metadata_enabled", False) if user else False
-        new_status = not current
-        await user_col.update_one({"_id": user_id}, {"$set": {"metadata_enabled": new_status}}, upsert=True)
-        return new_status
-
-    @staticmethod
-    async def set_metadata(user_id: int, field: str, value: Any) -> None:
-        await user_col.update_one({"_id": user_id}, {"$set": {f"metadata.{field}": value}}, upsert=True)
-
-    @staticmethod
-    async def get_metadata(user_id: int) -> Dict[str, Any]:
-        user = await user_col.find_one({"_id": user_id})
-        return user.get("metadata", {}) if user else {}
-
-    # ========== Sequence Mode ==========
-    @staticmethod
-    async def start_sequence(user_id: int) -> None:
+    async def start_sequence(user_id: int):
         await user_col.update_one({"_id": user_id}, {"$set": {"sequence": []}}, upsert=True)
 
     @staticmethod
@@ -105,11 +119,11 @@ class Element_Network:
         return user.get("sequence", []) if user else []
 
     @staticmethod
-    async def store_sequence_file(user_id: int, file_name: str, file_id: str, caption: Optional[str] = None) -> None:
+    async def store_sequence_file(user_id: int, file_name: str, file_id: str, caption: Optional[str] = None):
         await user_col.update_one(
             {"_id": user_id},
             {"$push": {"sequence": {"file_name": file_name, "file_id": file_id, "caption": caption}}},
-            upsert=True,
+            upsert=True
         )
 
     @staticmethod
@@ -120,54 +134,44 @@ class Element_Network:
         return files
 
     @staticmethod
-    async def cancel_sequence(user_id: int) -> None:
+    async def cancel_sequence(user_id: int):
         await user_col.update_one({"_id": user_id}, {"$unset": {"sequence": ""}})
 
-    # ========== User Management ==========
-    @staticmethod
-    async def add_user(user_id: int) -> None:
-        if not await user_col.find_one({"_id": user_id}):
-            await user_col.insert_one({"_id": user_id})
-
-    @staticmethod
-    async def get_all_users() -> List[int]:
-        return [u["_id"] async for u in user_col.find({}, {"_id": 1})]
-
-    # ========== Premium Handling ==========
+    # ─────────── Premium Handling ───────────
     @staticmethod
     async def check_premium(user_id: int) -> int:
         user = await user_col.find_one({"_id": user_id})
         if not user or "premium" not in user:
             return 0
         expires: datetime = user["premium"]
-        if datetime.utcnow() > expires:
+        now = datetime.utcnow()
+        if now > expires:
             await user_col.update_one({"_id": user_id}, {"$unset": {"premium": 1}})
             return 0
-        delta = expires - datetime.utcnow()
+        delta = expires - now
         return max(delta.days, 0)
 
     @staticmethod
-    async def add_premium(user_id: int, days: int) -> None:
+    async def add_premium(user_id: int, days: int):
         expires = datetime.utcnow() + timedelta(days=days)
         await user_col.update_one({"_id": user_id}, {"$set": {"premium": expires}}, upsert=True)
 
     @staticmethod
-    async def remove_premium(user_id: int) -> None:
+    async def remove_premium(user_id: int):
         await user_col.update_one({"_id": user_id}, {"$unset": {"premium": 1}})
 
     @staticmethod
     async def list_premium_users() -> List[int]:
-        premium_users_cursor = user_col.find({"premium": {"$exists": True}})
-        return [u["_id"] async for u in premium_users_cursor]
+        async for u in user_col.find({"premium": {"$exists": True}}, {"_id": 1}):
+            yield u["_id"]
 
-    # ========== Caption & Thumbnail ==========
+    # ─────────── User Registration ───────────
     @staticmethod
-    async def get_caption(user_id: int) -> str:
-        user = await user_col.find_one({"_id": user_id})
-        return user.get("caption", "")
+    async def add_user(user_id: int):
+        if not await user_col.find_one({"_id": user_id}):
+            await user_col.insert_one({"_id": user_id})
 
     @staticmethod
-    async def get_thumbnail(user_id: int) -> Optional[str]:
-        user = await user_col.find_one({"_id": user_id})
-        return user.get("thumbnail", None)
+    async def get_all_users() -> List[int]:
+        return [u["_id"] async for u in user_col.find({}, {"_id": 1})]
         
