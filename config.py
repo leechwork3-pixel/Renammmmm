@@ -1,26 +1,47 @@
 import os
+import re
+import time
 
+# Match numeric IDs (for casting from env)
+id_pattern = re.compile(r'^-?\d+$')
 
 class Config:
+    # ---- Pyrogram / Bot credentials ----
     API_ID = int(os.environ.get("API_ID", 123456))
     API_HASH = os.environ.get("API_HASH", "your_api_hash")
     BOT_TOKEN = os.environ.get("BOT_TOKEN", "your_bot_token")
 
-    DB_URL = os.environ.get("DB_URL", "mongodb+srv://...")
+    # ---- Database ----
+    DB_URL = os.environ.get("DB_URL", "mongodb://localhost:27017")
     DB_NAME = os.environ.get("DB_NAME", "AutoRenameBot")
 
-    START_PIC = os.environ.get("START_PIC", "https://te.legra.ph/file/45453c9242ee37aa1670d.jpg")
+    # ---- Channels ----
+    START_PIC = os.environ.get(
+        "START_PIC",
+        "https://te.legra.ph/file/45453c9242ee37aa1670d.jpg"
+    )
     LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1001234567890"))
     SUPPORT_CHAT = int(os.environ.get("SUPPORT_CHAT", "-1001234567890"))
 
-    PORT = int(os.environ.get("PORT", 8080))
+    # Force subscribe channels (comma-separated)
+    FORCE_SUB_CHANNELS = [
+        int(x) if id_pattern.match(x) else x
+        for x in os.environ.get("FORCE_SUB_CHANNELS", "").split(',') if x
+    ]
+
+    # ---- Owner/Admin ----
     BOT_OWNER = int(os.environ.get("BOT_OWNER", "123456789"))
 
+    # ---- Hosting/Webhook ----
+    PORT = int(os.environ.get("PORT", 8080))
     WEBHOOK = os.environ.get("WEBHOOK", "False").lower() == "true"
 
-    FORCE_SUB_CHANNELS = os.environ.get("FORCE_SUB_CHANNELS", "").split(',')
+    # ---- Alias for backward compatibility ----
+    DUMP_CHANNEL = int(os.environ.get("DUMP_CHANNEL", "-1002887783820"))
+    STORAGE_CHANNEL = DUMP_CHANNEL
 
-    BOT_UPTIME = os.environ.get("BOT_UPTIME", "Unknown")
+    # ---- Uptime ----
+    BOT_UPTIME = time.time()
 
 
 class Txt:
@@ -38,10 +59,10 @@ Enjoy a fast and flexible renaming experience.
 /startsequence – Begin sequence renaming  
 /endsequence – Finish & sort sequence  
 /myplan – Check premium status  
-/settitle, /setauthor, /setartist... – Set metadata fields
+/settitle, /setauthor, /setartist... – Set metadata fields  
 /view_thumb – See current thumbnail  
 /set_caption – Add custom caption  
-/del_caption – Remove saved caption
+/del_caption – Remove saved caption  
 
 ✨ Premium users get better speeds and more features!
 """
@@ -53,13 +74,20 @@ Enjoy a fast and flexible renaming experience.
 
     FILE_NAME_TXT = """**📁 File Formatting Help:**
 
-You can use these placeholders:
-• {filename} = original name  
-• {ext} = extension (e.g. .mp4)  
-• {quality}, {season}, {episode} = manual values
+You can use these placeholders:  
+• {filename} = original name (no extension)  
+• {ext} = file extension (e.g. .mp4)  
+• {quality} = quality tag  
+• {season} = season number  
+• {episode} = episode number  
+• {chapter} = chapter number  
+• {language} = language code or label  
+• {resolution} = resolution (e.g. 1080p)  
+• {year} = release year  
+• {custom} = custom user text
 
-👉 Example:
-/format Series S{season}E{episode} [{quality}]{ext}
+👉 Example:  
+/format {title} S{season}E{episode} [{quality}]{ext}
 """
 
     DONATE_TXT = """**💸 Support Development**
@@ -83,7 +111,7 @@ Then DM proof to @Shadow_Blank"""
 
 Set custom strings to embed as title/author/artist/audio/subtitle/video.
 
-Use:
+Use:  
 /settitle  
 /setauthor  
 /setartist  
@@ -95,4 +123,4 @@ Use `/metadata` to toggle embedding support."""
 
 📊 {0}% Done  
 ⏱ {3}/s | 📦 {1}/{2} | ⏳ ETA: {4}"""
-  
+
