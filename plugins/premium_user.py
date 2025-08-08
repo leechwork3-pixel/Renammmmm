@@ -6,15 +6,22 @@ from config import Config
 
 @Client.on_message(filters.private & filters.command("myplan"))
 async def my_plan(c: Client, m: Message):
+    """
+    Show the remaining premium days for the user.
+    """
     days = await Element_Network.check_premium(m.from_user.id)
     if days > 0:
-        await m.reply_text(f"🌟 You have premium access for {days} day(s).")
+        await m.reply_text(f"🌟 You have premium access for {days} day(s). Enjoy!")
     else:
         await m.reply_text("🚫 You are not a premium user yet.\nUse `/myplan` after upgrading.")
 
 
 @Client.on_message(filters.user(Config.BOT_OWNER) & filters.command("addpremium"))
 async def add_premium(c: Client, m: Message):
+    """
+    Admin command to add premium status to a user for a specified number of days.
+    Usage: /addpremium <user_id> <days>
+    """
     if len(m.command) < 3:
         return await m.reply_text("❗ Usage: `/addpremium user_id days`\n\nExample: `/addpremium 123456789 30`")
 
@@ -32,6 +39,10 @@ async def add_premium(c: Client, m: Message):
 
 @Client.on_message(filters.user(Config.BOT_OWNER) & filters.command("rmpremium"))
 async def remove_premium(c: Client, m: Message):
+    """
+    Admin command to remove premium status for a user.
+    Usage: /rmpremium <user_id>
+    """
     if len(m.command) < 2:
         return await m.reply_text("❗ Usage: `/rmpremium user_id`")
 
@@ -46,6 +57,9 @@ async def remove_premium(c: Client, m: Message):
 
 @Client.on_message(filters.user(Config.BOT_OWNER) & filters.command("premiumusers"))
 async def list_premium_users(c: Client, m: Message):
+    """
+    Admin command to list all current premium users.
+    """
     try:
         users = await Element_Network.list_premium_users()
         if not users:
@@ -55,4 +69,4 @@ async def list_premium_users(c: Client, m: Message):
     except Exception as e:
         await m.reply_text("❌ Failed to load premium user list.")
         print(f"[PremiumUsersError] {e}")
-
+        
