@@ -11,7 +11,7 @@ class Config:
     API_ID = int(os.environ.get("API_ID", "24171111"))
     API_HASH = os.environ.get("API_HASH", "c850cb56b64b6c3b10ade9c28ef7966a")
     BOT_TOKEN = os.environ.get("BOT_TOKEN", "7813615574:AAFiXEgYhwsu1xs0RN5aRVUAFgoUq32NzbU")
-    BOT_USERNAME = os.environ.get("BOT_USERNAME", "@AutoRenamerr_Bot")
+    BOT_USERNAME = os.environ.get("BOT_USERNAME", "AutoRenamerr_Bot")
 
     # ────────── MongoDB Database ──────────
     DB_URL = os.environ.get("DB_URL", "mongodb+srv://Furina:furinafile@furinafile.tjrqfwh.mongodb.net/?retryWrites=true&w=majority&appName=Furinafile")
