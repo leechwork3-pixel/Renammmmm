@@ -1,0 +1,39 @@
+services:
+  - name: autorenamebot
+    region: sgp  # Choose your Koyeb region
+    platform: docker
+    instanceCount: 1
+    instanceType: starter
+    envVars:
+      - key: API_ID
+        sync: true
+      - key: API_HASH
+        sync: true
+      - key: BOT_TOKEN
+        sync: true
+      - key: DB_URL
+        sync: true
+      - key: DB_NAME
+        value: AutoRenameBot
+      - key: LOG_CHANNEL
+        sync: true
+      - key: SUPPORT_CHAT
+        sync: true
+      - key: DUMP_CHANNEL
+        sync: true
+      - key: BOT_OWNER
+        sync: true
+      - key: START_PIC
+        value: https://te.legra.ph/file/45453c9242ee37aa1670d.jpg
+      - key: WEBHOOK
+        value: "False"
+      - key: PORT
+        value: "8080"
+    image:
+      registry: docker.io
+      repository: your_dockerhub_username/autorenamebot
+      tag: latest
+    ports:
+      - port: 8080
+        protocol: TCP
+
