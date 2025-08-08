@@ -1,8 +1,11 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from helper.database import Element_Network
+from config import Config
 
-
+# ─────────────────────────────────────────────
+# Start a new sequence
+# ─────────────────────────────────────────────
 @Client.on_message(filters.private & filters.command("startsequence"))
 async def start_sequence(c: Client, m: Message):
     """
@@ -10,12 +13,19 @@ async def start_sequence(c: Client, m: Message):
     """
     try:
         await Element_Network.start_sequence(m.from_user.id)
-        await m.reply_text("🔄 Sequence mode started.\n\nNow send your files one at a time.")
+        await m.reply_text(
+            "🔄 **Sequence mode started!**\n\n"
+            "Now send your files one at a time in any order.\n"
+            "When done, use /endsequence to finalize & receive them."
+        )
     except Exception as e:
         await m.reply_text("❌ Failed to start sequence.")
         print(f"[startsequence error] {e}")
 
 
+# ─────────────────────────────────────────────
+# End sequence and send files
+# ─────────────────────────────────────────────
 @Client.on_message(filters.private & filters.command("endsequence"))
 async def end_sequence(c: Client, m: Message):
     """
@@ -37,13 +47,16 @@ async def end_sequence(c: Client, m: Message):
                     caption=file.get("caption", "")
                 )
             except Exception as e:
-                print(f"[send_file error] {file['file_name']} – {e}")
+                print(f"[send_file error] {file.get('file_name', 'Unknown')} – {e}")
 
     except Exception as e:
         await m.reply_text("❌ Failed to complete the sequence.")
         print(f"[endsequence error] {e}")
 
 
+# ─────────────────────────────────────────────
+# Show sequence list
+# ─────────────────────────────────────────────
 @Client.on_message(filters.private & filters.command("showsequence"))
 async def show_sequence(c: Client, m: Message):
     """
@@ -56,12 +69,15 @@ async def show_sequence(c: Client, m: Message):
             return await m.reply_text("📭 You haven’t added any files to the sequence yet.")
 
         text = "\n".join([f"{i+1}. {f['file_name']}" for i, f in enumerate(files)])
-        await m.reply_text(f"📋 Files in sequence:\n\n{text}")
+        await m.reply_text(f"📋 **Files in sequence:**\n\n{text}")
     except Exception as e:
         await m.reply_text("⚠️ Unable to list sequence files.")
         print(f"[showsequence error] {e}")
 
 
+# ─────────────────────────────────────────────
+# Cancel sequence
+# ─────────────────────────────────────────────
 @Client.on_message(filters.private & filters.command("cancelsequence"))
 async def cancel_sequence(c: Client, m: Message):
     """
@@ -73,5 +89,3 @@ async def cancel_sequence(c: Client, m: Message):
     except Exception as e:
         await m.reply_text("⚠️ Couldn't cancel sequence.")
         print(f"[cancelsequence error] {e}")
-
-
