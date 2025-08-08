@@ -18,7 +18,7 @@ class Config:
     DB_NAME = os.environ.get("DB_NAME", "AutoRenameBot")
 
     # ────────── Channels / Alerts ──────7813615574────
-    LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002585029413"))
+    LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002104276255"))
     SUPPORT_CHAT = int(os.environ.get("SUPPORT_CHAT", "-1002329676743"))
     DUMP_CHANNEL = int(os.environ.get("DUMP_CHANNEL", "-1002104276255"))
     STORAGE_CHANNEL = DUMP_CHANNEL
