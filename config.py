@@ -2,7 +2,7 @@ import os
 import re
 import time
 
-# Pattern to validate integer values like chat IDs
+# Pattern to validate integer values like chat or user IDs
 id_pattern = re.compile(r'^-?\d+$')
 
 
@@ -17,7 +17,7 @@ class Config:
     DB_URL = os.environ.get("DB_URL", "mongodb+srv://Furina:furinafile@furinafile.tjrqfwh.mongodb.net/?retryWrites=true&w=majority&appName=Furinafile")
     DB_NAME = os.environ.get("DB_NAME", "AutoRenameBot")
 
-    # ────────── Channels / Alerts ──────7813615574────
+    # ────────── Channels / Notifications ──────────
     LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002104276255"))
     SUPPORT_CHAT = int(os.environ.get("SUPPORT_CHAT", "-1002329676743"))
     DUMP_CHANNEL = int(os.environ.get("DUMP_CHANNEL", "-1002104276255"))
@@ -25,25 +25,56 @@ class Config:
 
     FORCE_SUB_CHANNELS = [
         int(x) if id_pattern.match(x) else x
-        for x in os.environ.get("FORCE_SUB_CHANNELS", "-1002851018823").split(',') if x
+        for x in os.environ.get("FORCE_SUB_CHANNELS", "-1002851018823").split(",") if x
     ]
 
+    # ────────── Bot Ownership / Admin List ──────────
+    BOT_OWNER = int(os.environ.get("BOT_OWNER", "1335306418"))
+    ADMIN = list(set(
+        [BOT_OWNER] + [
+            int(x) if id_pattern.match(x) else x
+            for x in os.environ.get("ADMIN", "1335306418").split()
+            if x
+        ]
+    ))
+
+    # ────────── Hosting & Webhook Settings ──────────
+    WEBHOOK = os.environ.get("WEBHOOK", "False").lower() in ["true", "1"]
+    PORT = int(os.environ.get("PORT", 8080))
+
+    # ────────── Display Assets ──────────
     START_PIC = os.environ.get(
-        "START_PIC",
-        "https://te.legra.ph/file/45453c9242ee37aa1670d.jpg"
+        "START_PIC", "https://te.legra.ph/file/45453c9242ee37aa1670d.jpg"
     )
 
-    # ────────── Owner/Admin Control ──────────
-    BOT_OWNER = int(os.environ.get("BOT_OWNER", "1335306418"))
-    ADMIN = [BOT_OWNER]  # You can add more user IDs here manually if needed
-
-    # ────────── Webhook/Hosting ──────────
-    PORT = int(os.environ.get("PORT", 8080))
-    WEBHOOK = os.environ.get("WEBHOOK", "False").lower() in ["true", "1"]
-
-    # ────────── Runtime Info ──────────
+    # ────────── Runtime State ──────────
     BOT_UPTIME = time.time()
+    DOWNLOAD_DIR = os.environ.get("DOWNLOAD_DIR", "downloads")
+    METADATA_DIR = os.environ.get("METADATA_DIR", "metadata")
 
+    # ────────── Rename Formatting Defaults ──────────
+    DEFAULT_RENAME_PATTERN = os.environ.get("DEFAULT_RENAME_PATTERN", "{filename}")
+    CAPTION_PLACEHOLDER = os.environ.get("CAPTION_PLACEHOLDER", "{filename} | {filesize}")
+
+    # ────────── Optional Metadata Defaults ──────────
+    TITLE = os.environ.get("TITLE", "")
+    AUTHOR = os.environ.get("AUTHOR", "")
+    ARTIST = os.environ.get("ARTIST", "")
+    CHAPTER = os.environ.get("CHAPTER", "")
+    YEAR = os.environ.get("YEAR", "")
+    SEASON = os.environ.get("SEASON", "")
+    EPISODE = os.environ.get("EPISODE", "")
+    QUALITY = os.environ.get("QUALITY", "WEB-DL")
+    LANGUAGE = os.environ.get("LANGUAGE", "English")
+    RESOLUTION = os.environ.get("RESOLUTION", "1080p")
+    CUSTOM_TEXT = os.environ.get("CUSTOM_TEXT", "")
+
+    # ────────── Feature Flags ──────────
+    CLEANUP = os.environ.get("CLEANUP", "True").lower() in ["true", "1"]
+    DELETE_MSG = os.environ.get("DELETE_MSG", "False").lower() in ["true", "1"]
+    ENABLE_PREMIUM = os.environ.get("ENABLE_PREMIUM", "False").lower() in ["true", "1"]
+    BROADCAST = os.environ.get("BROADCAST", "True").lower() in ["true", "1"]
+    PREMIUM_TAG = os.environ.get("PREMIUM_TAG", "💎")
 
 class Txt:
     START_TXT = """**👋 Hello! I'm AutoRenameBot**  
@@ -67,35 +98,33 @@ Rename, customize and format like a pro.
 🔹 /view_thumb – View thumbnail  
 🔹 /del_caption – Remove saved caption  
 
-🚀 Premium users enjoy higher speed & more features.
-"""
+🚀 Premium users enjoy higher speed & more features."""
 
     ABOUT_TXT = """**ℹ️ Bot Info**
 
-🤖 Bot Name: AutoRenameBot  
-👨‍💻 Dev: @Shadow_Blank  
+🤖 Bot: AutoRenameBot  
+👨‍💻 Developer: @Shadow_Blank  
 📚 Library: Pyrogram v2  
-🧠 Language: Python 3  
+💻 Language: Python 3  
 ☁️ Hosting: VPS / Koyeb / Render
 
-🔗 Source: Contact developer"""
+🔗 Source code available via developer."""
 
     FILE_NAME_TXT = """**🔡 Rename Format Placeholders:**  
 
-Use these variables in /format or /setformat:
+You can use these in /format or /setformat:
 
-• {filename} – Original filename (no ext)  
-• {ext} – File extension  
-• {title}, {quality}, {language}, {resolution}  
-• {season}, {episode}, {chapter}  
-• {year}, {custom}
+• {filename} → Original name  
+• {ext} → Extension  
+• {title}, {season}, {episode}, {quality}  
+• {language}, {resolution}, {year}, {custom}
 
 📝 Example:  
 `/setformat {title}.S{season}E{episode}.{quality}{ext}`"""
 
     DONATE_TXT = """**💰 Donations Welcome**
 
-If this bot helped you, consider donating:
+☕ If this bot helps you, consider supporting:
 
 ✅ UPI: `Shadow_Blank@ybl`  
 📩 Send receipt to @Shadow_Blank
@@ -104,65 +133,59 @@ Thanks for supporting free tools ❤️"""
 
     PLAN_TEXT = """**💠 Premium Plans**
 
-Access more speed & file capacity:
+Unlock more speed, size, and priority:
 
 • 1 Month – ₹40  
 • 2 Months – ₹70  
 • Lifetime – ₹200
 
-Pay via UPI: `Shadow_Blank@ybl`  
-Then message @Shadow_Blank with your Telegram ID.
-"""
+💸 Pay via UPI: `Shadow_Blank@ybl`  
+➤ Then DM @Shadow_Blank with proof & @ID"""
 
     META_TXT = """🎞️ **Metadata Help**
 
-Insert embedded metadata into files using:
+Update embedded tags using:
 
-/settitle <name>  
-/setauthor <text>  
-/setartist <text>  
-/setvideo <text>  
-/removefield <metadata_key>  
-/metadata to toggle on/off
+/settitle, /setartist, /setauthor  
+/setvideo, /setaudio, /setsubtitle  
+/removefield <key>
 
-Supports most MP4, MKV and audio formats."""
+/metadata – Toggle metadata on/off"""
 
-    SEQUENCE_TXT = """📁 **Sequence Rename Help**
+    SEQUENCE_TXT = """📁 **Sequence Rename**
 
-Sequence mode lets you queue multiple files and rename them all at once.
-
-1. Send `/startsequence`  
+1. `/startsequence` – Begin upload session  
 2. Upload files one by one  
-3. Send `/endsequence` to receive them renamed  
-4. `/cancelsequence` to discard session"""
+3. `/endsequence` – Get renamed set  
+💡 Useful for TV series, batches, etc."""
 
-    THUMBNAIL_TXT = """🖼 **Thumbnail Management**
+    THUMBNAIL_TXT = """🖼 **Thumbnail & Poster**
 
-• Send a photo with caption `/set_thumb` to save thumbnail  
-• `/view_thumb` to preview thumbnail  
-• `/del_thumb` to reset thumbnail"""
+• Send photo with `/set_thumb`  
+• `/view_thumb` → Preview current one  
+• `/del_thumb` → Reset thumbnail"""
 
-    CAPTION_TXT = """✏️ **Custom Caption**
+    CAPTION_TXT = """✏️ **Custom Caption Format**
 
-Use variables in your caption:
+Use in `/set_caption`:
 
-• `{filename}` – File name  
-• `{filesize}` – File size  
-• `{duration}` – Duration (for video/audio)
+• {filename}  
+• {filesize}  
+• {duration}
 
-✅ Example:  
-`/set_caption {filename} | {filesize}`
+Example:  
+`{filename} | {filesize}`"""
 
-You can delete using `/del_caption` or preview with `/view_caption`.
-"""
+    SOURCE_TXT = """🧪 *Open Source Notice*
 
-    SOURCE_TXT = """🧪 This bot is custom-built by @Shadow_Blank.
+This bot is a custom build for media enthusiasts.
 
-For deployment/custom version, contact the dev."""
-    
+To deploy or get a paid version → Contact @Shadow_Blank."""
+
     PREMIUM_TXT = PLAN_TEXT
-    PROGRESS_BAR = """
 
+    PROGRESS_BAR = """
 📊 {0}%  
 📦 {1}/{2} | ⚡ {3}/s  
 ⏳ ETA: {4}"""
+    
