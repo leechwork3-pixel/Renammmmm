@@ -1,91 +1,161 @@
-# 🛠️ AutoRenameBot
+# 🤖 AutoRenameBot
 
-A powerful Telegram bot to rename, retitle, and reformat your Telegram media — fast, customizable, and fully async.
+A powerful and feature-rich Telegram Bot that helps you rename & format files with thumbnails, captions, metadata, and more — powered by Pyrogram.
 
----
-
-## ✨ Features
-
-- Rename files via templates (e.g. `/format Series S{season}E{episode}`)
-- Set custom thumbnails and captions
-- Edit metadata: title, author, artist, etc.
-- Sequence renaming (sort episodes automatically)
-- NSFW filtering (filename/content block)
-- Premium mode support
-- Force subscription / logging channels
-- Webhook or polling support (Render / Koyeb / VPS)
+Supports documents, audio, video, and batch rename operations with premium features and admin controls 🎛
 
 ---
 
-## 🚀 Deployment
+## 🚀 Features
 
-### 🔧 Environment Variables Required
-
-| Variable         | Description                                   |
-|------------------|-----------------------------------------------|
-| `API_ID`         | From my.telegram.org                          |
-| `API_HASH`       | From my.telegram.org                          |
-| `BOT_TOKEN`      | Your BotFather token                          |
-| `DB_URL`         | MongoDB URI                                   |
-| `DB_NAME`        | MongoDB database name                         |
-| `LOG_CHANNEL`    | Log group ID (including `-100`)               |
-| `SUPPORT_CHAT`   | Support group or channel ID                   |
-| `WEBHOOK`        | `True` for Render/Koyeb, `False` for polling  |
-| `START_PIC`      | URL for start banner (optional)               |
-| `BOT_OWNER`      | Your user ID                                  |
-| `FORCE_SUB_CHANNELS` | Channel usernames IDs separated by `,`    |
+- ✅ Rename Telegram files (video, audio, document)
+- 🎯 Set formatting templates with placeholders
+- 📝 Custom thumbnails & captions
+- 🧾 Embed metadata (title, quality, episode, etc.)
+- 🧵 Sequence/bulk renaming
+- 💎 Premium user system
+- 🔒 Force join channels before bot usage
+- 📢 Broadcast & Admin commands
+- 💨 Koyeb / Render / Docker deployable
 
 ---
 
-### 🐳 Docker Deploy
+## 🌐 Environment Variables (.env)
 
-git clone https://github.com/yourrepo/AutoRenameBot
+| Key                  | Required | Description                                      |
+|----------------------|----------|--------------------------------------------------|
+| API_ID               | ✅       | Telegram API ID                                  |
+| API_HASH             | ✅       | Telegram API Hash                                |
+| BOT_TOKEN            | ✅       | Token from @BotFather                            |
+| DB_URL               | ✅       | MongoDB connection string (MongoDB Atlas/local)  |
+| DB_NAME              | ❌       | MongoDB database name (default: AutoRenameBot)   |
+| LOG_CHANNEL          | ✅       | Channel ID for status updates                    |
+| SUPPORT_CHAT         | ❌       | Group/channel to link as contact/help            |
+| DUMP_CHANNEL         | ✅       | Storage channel ID for renamed file logs         |
+| BOT_OWNER            | ✅       | Your own Telegram user ID                        |
+| START_PIC            | ❌       | Image URL for /start message                     |
+| FORCE_SUB_CHANNELS   | ❌       | Comma-separated list of @channels or -100 IDs    |
+| PORT                 | ❌       | Webhook port (default: 8080)                     |
+| WEBHOOK              | ❌       | Use webhook (True/False)                         |
+
+---
+
+## 📦 Installation
+
+git clone https://github.com/yourusername/AutoRenameBot
 cd AutoRenameBot
-docker build -t autorename .
-docker run --env-file .env autorename
+pip install -r requirements.txt
 
-📝 Use a `.env` file to define secrets like:
+cp .env.example .env
 
-BOT_TOKEN=your_bot_token
-API_ID=1111111
-API_HASH=yourapihash
-...
+Fill your credentials in the .env file
+python bot.py
 
 ---
 
-## 🧰 Commands Reference
+## 🐳 Docker Deployment
 
-### 👥 User Commands
+docker build -t autorenamebot .
+docker run --env-file .env autorenamebot
 
-/start – Bot welcome
-/format [template] – Set rename format
-/setformat [template] – Alias of /format
-/startsequence – Begin sorting
-/endsequence – Send final sorted batch
-/set_caption, /view_thumb – Caption/thumb tools
-/myplan – See premium status
-
-
-### 🔐 Admin/Owner Commands
-
-/restart – Force restart
-/status – Show stats
-/addpremium [user] [days]
-/rmpremium [user]
-
+Or deploy using DockerHub + Koyeb with the included `koyeb.yaml`.
 
 ---
 
-## 👤 Credits
+## 📚 Bot Commands
 
-- Developer: [@Shadow_Blank](https://t.me/Shadow_Blank)  
-- Inspired by: Codeflix-Bots / Pyrogram Community  
-- Database Engine: Element_Network (MongoDB wrapper)
+### 🧩 General
+
+| Command     | Function                                 |
+|-------------|-------------------------------------------|
+| /start      | Start the bot                            |
+| /help       | Show help menu                           |
+| /about      | Show about the bot                       |
+| /tutorial   | Format guide and placeholders            |
+
+### ✏️ Rename & Template
+
+| Command              | Function                                         |
+|----------------------|--------------------------------------------------|
+| /setformat <format>  | Set static rename template                       |
+| /format              | View available placeholders                      |
+| /autorename <format> | (Premium) Quick rename formatting                |
+| /setmedia            | (Premium) Choose output: document, video, audio  |
+
+🧩 Available placeholders: `{title}`, `{quality}`, `{season}`, `{episode}`, `{language}`, `{ext}`, `{custom}`
+
+### 🖼️ Captions & Thumbnails
+
+| Command         | Purpose                              |
+|------------------|---------------------------------------|
+| /set_caption     | Save a caption with variables         |
+| /view_caption    | View saved caption                    |
+| /del_caption     | Delete saved caption                  |
+| /set_thumb       | Send thumb image + use this command   |
+| /view_thumb      | Show current thumbnail                |
+| /del_thumb       | Delete saved thumbnail                |
+
+### 🎞 Metadata Editor
+
+| Command           | Description                       |
+|--------------------|-----------------------------------|
+| /metadata          | Toggle metadata usage             |
+| /settitle, /setauthor, /setquality etc. | Set tags    |
+| /removemetadata    | Clear specific metadata field     |
+
+### 🧵 Queue & Sequence
+
+| Command             | Description                        |
+|----------------------|------------------------------------|
+| /startsequence       | Start batching files               |
+| /endsequence         | Stop sequence and rename them      |
+| /showsequence        | Show queued sequence list          |
+| /cancelsequence      | Cancel active sequence mode        |
+| /queue               | See user's file processing queue   |
+| /clearqueue          | Clear user's rename queue          |
+| /removefromqueue     | Remove a file from your queue      |
+| /clearallqueue       | (Admin) Remove queues for all users|
+
+### 💎 Premium Access
+
+| Command               | Description                    |
+|------------------------|--------------------------------|
+| /myplan               | View your premium status       |
+| /addpremium <id> <days> | (Admin) Add premium days     |
+| /rmpremium <id>       | (Admin) Remove premium access  |
+| /premiumusers         | (Admin) List all premium users |
+
+### 👑 Admin Tools
+
+| Command             | Purpose                               |
+|----------------------|----------------------------------------|
+| /broadcast (reply) | Send to all users (reply-based)        |
+| /restart            | Restart the bot                       |
+| /stats /status      | View bot uptime and user count         |
+| /ban, /unban        | Block/unblock user interaction         |
+| /leaderboard        | Top active users                       |
+| /search <keyword>   | Search dumped files via caption        |
 
 ---
 
-## 📌 License
+## 🔒 Force Subscribe
 
-© 2025 Shadow_Blank. Licensed under GPLv3.
+If enabled via `FORCE_SUB_CHANNELS`, users must join your update channels before they can use the bot.
 
+They’ll see inline toggle and invite buttons until all conditions are met.
+
+---
+
+## 🧑‍💻 Credits
+
+- 🧠 Developed & maintained by: [@Shadow_Blank](https://t.me/Shadow_Blank)
+- ⚙️ Powered by: Python 3.10 · Pyrogram 2.x · MongoDB
+- ☁️ Deployment: Koyeb, Render, Heroku (Docker)
+
+---
+
+## 📄 License
+
+MIT License  
+Feel free to use, fork, deploy — stars welcome ⭐
 
