@@ -1,4 +1,3 @@
-import os
 import time
 from datetime import datetime, timedelta
 from pytz import timezone
@@ -8,12 +7,13 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import Config
 
 try:
-    from route import web_server
+    from route import web_server  # Optional webhook support
 except ImportError:
-    web_server = None  # Disable webhook if route.py missing
+    web_server = None
 
 SUPPORT_CHAT = Config.SUPPORT_CHAT
 PORT = Config.PORT
+
 
 class Bot(Client):
     def __init__(self):
@@ -22,9 +22,9 @@ class Bot(Client):
             api_id=Config.API_ID,
             api_hash=Config.API_HASH,
             bot_token=Config.BOT_TOKEN,
-            workers=64,
             plugins={"root": "plugins"},
-            sleep_threshold=15
+            workers=64,
+            sleep_threshold=15,
         )
         self.start_time = time.time()
 
@@ -34,33 +34,37 @@ class Bot(Client):
         self.mention = me.mention
         self.username = me.username
 
-        # Start webhook server if needed
+        # Optional webhook startup
         if Config.WEBHOOK and web_server:
             runner = web.AppRunner(await web_server())
             await runner.setup()
             await web.TCPSite(runner, "0.0.0.0", PORT).start()
 
-        uptime_seconds = int(time.time() - self.start_time)
-        uptime_string = str(timedelta(seconds=uptime_seconds))
+        # Prepare startup message
+        uptime = timedelta(seconds=int(time.time() - self.start_time))
+        now = datetime.now(timezone("Asia/Kolkata"))
 
+        caption = (
+            f"**🤖 AutoRenameBot Restarted Successfully!**\n\n"
+            f"👤: {self.mention}\n"
+            f"⏰ Uptime: `{uptime}`\n"
+            f"📆 Date: `{now.strftime('%d %B %Y, %I:%M:%S %p')}`"
+        )
+
+        # Send startup message to configured channels
         for chat_id in filter(None, [Config.LOG_CHANNEL, SUPPORT_CHAT]):
             try:
-                now = datetime.now(timezone("Asia/Kolkata"))
                 await self.send_photo(
                     chat_id=chat_id,
                     photo=Config.START_PIC,
-                    caption=(
-                        f"**🤖 AutoRenameBot Restarted Successfully!**\n\n"
-                        f"👤: {me.mention}\n"
-                        f"⏰ Uptime: `{uptime_string}`\n"
-                        f"📆 Date: `{now.strftime('%d %B %Y, %I:%M:%S %p')}`"
-                    ),
+                    caption=caption,
                     reply_markup=InlineKeyboardMarkup([
                         [InlineKeyboardButton("🚀 Updates", url="https://t.me/Shadow_Blank")]
                     ])
                 )
             except Exception as e:
-                print(f"[Startup] Couldn't send log message: {e}")
+                print(f"[Startup] Failed to send message to {chat_id}: {e}")
+
 
 if __name__ == "__main__":
     Bot().run()
