@@ -1,10 +1,11 @@
-from pyrogram import Client, filters
 from pyrogram.types import Message
+import re
 
+# ─────────────────────────────────────────────
 # NSFW keyword categories
+# ─────────────────────────────────────────────
 nsfw_keywords = {
     "general": [
-        # (same as your provided list)
         "porn", "sex", "nude", "naked", "boobs", "tits", "pussy", "dick", "cock", "ass",
         "fuck", "blowjob", "cum", "orgasm", "shemale", "erotic", "masturbate", "anal",
         "hardcore", "bdsm", "fetish", "lingerie", "xxx", "milf", "gay", "lesbian",
@@ -17,7 +18,7 @@ nsfw_keywords = {
         "rough sex", "dirty talk", "sex chat", "nude pic", "lewd", "titty", "twerk", "breasts",
         "penis", "vagina", "clitoris", "genitals", "sexual", "kamasutra", "pedo", "rape",
         "bondage", "cum inside", "creampie", "sex slave", "sex doll", "sex machine", "latex",
-        "oral sex", "butt", "slut", "whore", "tramp", "skank", "cumdumpster", "cultured",
+        "oral sex", "slut", "whore", "tramp", "skank", "cumdumpster", "cultured",
         "ecchi", "doujin", "hentai", "smut", "waifu", "futanari", "tentacle"
     ],
     "hentai": [
@@ -43,28 +44,43 @@ nsfw_keywords = {
     ]
 }
 
-# List of safe exceptions (useful terms that shouldn't trigger false positive matches)
-exception_keywords = ["nxivm", "classroom", "assassination", "geass"]
+# ─────────────────────────────────────────────
+# Exceptions: words that may contain "NSFW" substrings but are safe
+# ─────────────────────────────────────────────
+exception_keywords = [
+    "nxivm", "classroom", "assassination", "geass"
+]
 
+# ─────────────────────────────────────────────
 async def check_anti_nsfw(file_name: str, message: Message) -> bool:
     """
-    Checks a file name for NSFW terms. Returns True if blocked.
+    Checks file name and (if available) message caption/text for NSFW terms.
+    Returns True if blocked (NSFW found).
     """
     if not file_name:
         return False
 
-    name_lower = file_name.lower()
+    # Combine filename + message.caption/text for deeper scanning
+    text_to_check = file_name.lower()
+    if message.caption:
+        text_to_check += " " + message.caption.lower()
+    if message.text and message.text != file_name:
+        text_to_check += " " + message.text.lower()
 
     # Check exceptions first
     for safe in exception_keywords:
-        if safe in name_lower:
-            return False  # Allow it
+        if safe in text_to_check:
+            return False
 
-    # Run NSFW keyword checks
+    # Word-boundary regex to avoid partial matches (e.g., "pass" should not trigger "ass")
     for category, keywords in nsfw_keywords.items():
         for kw in keywords:
-            if kw in name_lower:
-                await message.reply_text("🚫 NSFW content detected! Renaming of this file is not allowed.")
+            pattern = r"\b" + re.escape(kw) + r"\b"
+            if re.search(pattern, text_to_check):
+                await message.reply_text(
+                    "🚫 NSFW content detected!\n"
+                    "This file cannot be renamed or processed."
+                )
                 return True
 
     return False
