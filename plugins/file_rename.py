@@ -2,6 +2,7 @@ import os
 import time
 import datetime
 import logging
+import re
 from PIL import Image
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -30,8 +31,6 @@ QUALITY_PATTERNS = [
     r"(1080|720|480|360)p",
     r"\b(HDRip|HDTV|BluRay|WEBRip)\b",
 ]
-
-import re
 
 def extract_season_episode(text):
     for pattern, (s_group, e_group) in SEASON_EPISODE_PATTERNS:
@@ -162,17 +161,7 @@ async def file_rename_handler(client: Client, message: Message):
             progress_args=("📥 Downloading...", status, time.time())
         )
 
-        # Attempt to add metadata if possible (placeholder function)
-        # You need to implement add_metadata if you want this feature
-        # processed_path = download_path
-        # try:
-        #     meta_output = os.path.join(downloads_dir, f"meta_{new_filename}")
-        #     await add_metadata(download_path, meta_output, user_id)
-        #     processed_path = meta_output
-        # except Exception as e:
-        #     logger.warning(f"Metadata embedding skipped: {e}")
-
-        processed_path = download_path  # for now, just use original path
+        processed_path = download_path  # If you add metadata embedding, update this accordingly
 
         # Prepare caption
         caption_tpl = await Element_Network.get_caption(user_id)
@@ -256,3 +245,4 @@ async def file_rename_handler(client: Client, message: Message):
     finally:
         renaming_operations.pop(media.file_id, None)
         await cleanup_files(download_path, thumb_path)
+
