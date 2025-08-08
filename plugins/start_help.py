@@ -3,7 +3,75 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 
 from helper.database import Element_Network
-from config import Config, Txt
+from config import Config
+
+# Text constants class to provide all required bot text templates
+class Txt:
+    START_TXT = (
+        "👋 Hello, {}!\n\n"
+        "Welcome to AutoRenameBot! Use the buttons below to navigate."
+    )
+
+    HELP_TXT = (
+        "Here are the available commands and their descriptions.\n\n"
+        "Use the buttons to get detailed instructions on each feature."
+    )
+
+    CAPTION_TXT = (
+        "You can set custom captions for your files.\n\n"
+        "Use placeholders like {filename}, {filesize}, {duration} to customize."
+    )
+
+    PREMIUM_TXT = (
+        "💎 Premium Features:\n"
+        "- Auto Rename\n"
+        "- Set media type\n"
+        "- And more exclusive commands.\n\n"
+        "Upgrade by contacting support."
+    )
+
+    ABOUT_TXT = (
+        "AutoRenameBot v1.0\n"
+        "Developed by @Shadow_Blank\n"
+        "License: MIT\n"
+        "Powered by Pyrogram and MongoDB."
+    )
+
+    DONATE_TXT = (
+        "If you like this bot, consider donating to support its development.\n\n"
+        "Contact @Shadow_Blank for details."
+    )
+
+    FILENAME_TXT = (
+        "Filename formatting helps you set custom names for your files.\n"
+        "Use placeholders such as:\n"
+        "- {title}\n"
+        "- {season}\n"
+        "- {episode}\n"
+        "- {quality}\n"
+        "- {custom}\n\n"
+        "Example: {title}_S{season}E{episode}_{quality}"
+    )
+
+    THUMBNAIL_TXT = (
+        "Custom thumbnails can be set by sending photos to this bot.\n"
+        "Use the commands to view or delete saved thumbnails."
+    )
+
+    SEQUENCE_TXT = (
+        "Sequence mode allows batch renaming of multiple files.\n"
+        "Start a sequence, send files, and then end the sequence to rename all."
+    )
+
+    METADATA_TXT = (
+        "Metadata allows embedding additional info into your files.\n"
+        "Set titles, authors, quality tags, and more."
+    )
+
+    SOURCE_TXT = (
+        "Source code is available on GitHub.\n"
+        "Contact @Shadow_Blank for repository links."
+    )
 
 
 @Client.on_message(filters.private & filters.command("start"))
@@ -59,7 +127,7 @@ async def callback_handler(client: Client, query: CallbackQuery):
                 [InlineKeyboardButton("• ᴍʏ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs •", callback_data='help')],
                 [InlineKeyboardButton("• ᴘʀᴇᴍɪᴜᴍ •", callback_data='premiumx')],
                 [InlineKeyboardButton('• ᴅᴇᴠ', url='https://t.me/Shadow_Blank'),
-                 InlineKeyboardButton('sᴜᴘᴘᴏʀᴛ •', url='https://t.me/manga_campus_chat')],
+                 InlineKeyboardButton('sᴜᴘᴏʀᴛ •', url='https://t.me/manga_campus_chat')],
                 [InlineKeyboardButton('• ᴀʙᴏᴜᴛ', callback_data='about'),
                  InlineKeyboardButton('sᴏᴜʀᴄᴇ •', callback_data='source')]
             ])
@@ -172,4 +240,4 @@ async def callback_handler(client: Client, query: CallbackQuery):
                 await query.message.reply_to_message.delete()
         except Exception:
             pass
-            
+
