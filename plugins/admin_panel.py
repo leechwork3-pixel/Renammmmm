@@ -6,7 +6,11 @@ import logging
 import datetime
 
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import (
+    Message,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup
+)
 from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
 
 from config import Config, Txt
@@ -15,12 +19,12 @@ from helper.database import Element_Network
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-ADMIN_USER_ID = Config.BOT_OWNER
-is_restarting = False
+ADMIN_USER_ID = Config.ADMIN
+is_restarting = False  # Lock flag for restart control
 
 
 # ─────────────────────────────────────────────
-# /restart — Admin: Restart the bot forcefully
+# /restart — Bot Owner: Restart the bot 
 # ─────────────────────────────────────────────
 @Client.on_message(filters.private & filters.command("restart") & filters.user(ADMIN_USER_ID))
 async def restart_bot(b: Client, m: Message):
@@ -29,101 +33,108 @@ async def restart_bot(b: Client, m: Message):
         is_restarting = True
         await m.reply_text("♻️ Restarting AutoRenameBot...")
         await asyncio.sleep(1)
-        b.stop()  # Optional: cleanup
+        b.stop()
         time.sleep(2)
         os.execl(sys.executable, sys.executable, *sys.argv)
 
 
 # ─────────────────────────────────────────────
-# /tutorial — Show format template with guide
+# /tutorial — Show Format Template Guide
 # ─────────────────────────────────────────────
 @Client.on_message(filters.private & filters.command("tutorial"))
-async def tutorial_handler(bot: Client, message: Message):
+async def tutorial(bot: Client, message: Message):
     user_id = message.from_user.id
-    template = await Element_Network.get_format_template(user_id)
+    format_template = await Element_Network.get_format_template(user_id)
+    format_template = format_template or "{filename}"  # default fallback
+
+    # If Txt.FILE_NAME_TXT uses .format(), inject safely
+    try:
+        text = Txt.FILE_NAME_TXT.format(format_template=format_template)
+    except KeyError:
+        text = Txt.FILE_NAME_TXT
 
     await message.reply_text(
-        text=Txt.FILE_NAME_TXT.format(
-            format_template=template if template else "{filename}"
-        ),
+        text=text,
         disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("• Owner", url="https://t.me/Shadow_Blank"),
-             InlineKeyboardButton("• Tutorial", url="https://t.me/Shadow_Blank")]
+            [
+                InlineKeyboardButton("• ᴏᴡɴᴇʀ", url="https://t.me/Shadow_Blank"),
+                InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ", url="https://t.me/Element_Network")
+            ]
         ])
     )
 
 
 # ─────────────────────────────────────────────
-# /stats or /status — Admin: Bot health summary
+# /stats or /status — Bot Owner: Show Bot Health
 # ─────────────────────────────────────────────
 @Client.on_message(filters.command(["stats", "status"]) & filters.user(ADMIN_USER_ID))
 async def get_stats(bot: Client, message: Message):
+    total_users = await Element_Network.total_users_count()
+    uptime = time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - bot.uptime))
     start = time.time()
-    uptime = time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - bot.start_time))
-
-    users = await Element_Network.get_all_users()
-    total_users = len(users)
-
-    ping_msg = await message.reply("📡 Gathering bot stats...")
+    status_msg = await message.reply("🧮 Calculating status...")
     end = time.time()
-    ping_ms = (end - start) * 1000
 
-    await ping_msg.edit(
+    ping_time = (end - start) * 1000
+    await status_msg.edit(
         f"**📊 Bot Status Report**\n\n"
-        f"🕒 Uptime: `{uptime}`\n"
-        f"📶 Ping: `{ping_ms:.2f} ms`\n"
-        f"👥 Total Users: `{total_users}`"
+        f"⏱ Uptime: `{uptime}`\n"
+        f"📡 Ping: `{ping_time:.2f} ms`\n"
+        f"👥 Users: `{total_users}`"
     )
 
 
 # ─────────────────────────────────────────────
-# /broadcast — Admin-only user broadcast
-# REQUIRES: Reply to message to send
+# /broadcast (reply) — Owner: Send message to all 
 # ─────────────────────────────────────────────
 @Client.on_message(filters.command("broadcast") & filters.user(ADMIN_USER_ID) & filters.reply)
 async def broadcast_handler(bot: Client, m: Message):
+    await bot.send_message(
+        Config.LOG_CHANNEL,
+        f"📢 Broadcast started by {m.from_user.mention} (`{m.from_user.id}`)"
+    )
+
+    broadcast_msg = m.reply_to_message
+    all_users = await Element_Network.get_all_users()
+    total_users = len(all_users)
+
+    status = await m.reply_text("📤 Broadcast in progress...")
+    success = failed = done = 0
     start_time = time.time()
 
-    all_users = await Element_Network.get_all_users()
-    broadcast_msg = m.reply_to_message
-    total = len(all_users)
+    async for user in all_users:
+        user_id = user['_id']
+        status_code = await send_msg(user_id, broadcast_msg)
 
-    log_text = f"📢 Broadcast initiated by {m.from_user.mention} (`{m.from_user.id}`)"
-    await bot.send_message(Config.LOG_CHANNEL, log_text)
-
-    report = await m.reply_text("📣 Broadcast starting...")
-    success = failed = 0
-
-    for i, user_id in enumerate(all_users, start=1):
-        result = await send_msg(user_id, broadcast_msg)
-        if result == 200:
+        if status_code == 200:
             success += 1
-        elif result == 400:
+        else:
             failed += 1
-            await Element_Network.remove_premium(user_id)  # Cleanup
-        elif result == 500:
-            failed += 1
+            if status_code == 400:
+                await Element_Network.delete_user(user_id)
 
-        # Update report every 20 users
-        if i % 20 == 0 or i == total:
-            await report.edit(
-                f"📤 Broadcasting...\n"
-                f"✅ Sent: `{success}`\n"
+        done += 1
+        if done % 20 == 0 or done == total_users:
+            await status.edit(
+                f"📡 Broadcasting\n\n"
+                f"✅ Success: `{success}`\n"
                 f"❌ Failed: `{failed}`\n"
-                f"Progress: {i}/{total}"
+                f"📈 Progress: `{done}/{total_users}`"
             )
 
     duration = str(datetime.timedelta(seconds=int(time.time() - start_time)))
-    await report.edit(
-        f"📬 **Broadcast Completed**\n\n"
-        f"⏱ Duration: `{duration}`\n"
-        f"👥 Total: `{total}`\n✅ Sent: `{success}`\n❌ Failed: `{failed}`"
+    await status.edit(
+        f"✅ **Broadcast Complete**\n\n"
+        f"🕒 Duration: `{duration}`\n"
+        f"👥 Total: `{total_users}`\n"
+        f"✅ Sent: `{success}`\n"
+        f"❌ Failed: `{failed}`"
     )
 
 
 # ─────────────────────────────────────────────
-# Send copied message to user with proper checks
+# Send a message to a user safely
 # ─────────────────────────────────────────────
 async def send_msg(user_id, message):
     try:
@@ -133,8 +144,9 @@ async def send_msg(user_id, message):
         await asyncio.sleep(e.value)
         return await send_msg(user_id, message)
     except (InputUserDeactivated, UserIsBlocked, PeerIdInvalid):
+        logger.info(f"[Skip] {user_id} is inactive or blocked.")
         return 400
     except Exception as e:
-        logger.error(f"[Broadcast Error] User: {user_id} | Error: {e}")
+        logger.error(f"[Error] {user_id} → {e}")
         return 500
         
